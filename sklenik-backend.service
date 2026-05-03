@@ -1,0 +1,18 @@
+[Unit]
+Description=Sklenik Backend (FastAPI)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/webapps/sklenik/backend
+ExecStart=/opt/webapps/finance/backend/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8005 --workers 2
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+Environment=PYTHONPATH=/opt/webapps
+EnvironmentFile=/opt/webapps/sklenik/.env
+
+[Install]
+WantedBy=multi-user.target

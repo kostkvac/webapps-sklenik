@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Skleník – řízení</title>
+  <link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+  <header>
+    <h1>🌱 Skleník</h1>
+    <nav>
+      <button class="tab active" data-tab="dashboard">Dashboard</button>
+      <button class="tab" data-tab="zavlaha">Závlaha</button>
+      <button class="tab" data-tab="config">Konfigurace</button>
+      <button class="tab" data-tab="monitoring">Monitoring</button>
+      <button class="tab" data-tab="grafy">Grafy</button>
+      <button class="tab" data-tab="scripts">Skripty</button>
+    </nav>
+    <div class="status-pill" id="api-status">…</div>
+  </header>
+
+  <main>
+    <!-- Dashboard -->
+    <section id="tab-dashboard" class="tab-panel active">
+      <h2>Aktuální hodnoty</h2>
+      <div class="cards" id="latest-cards">Načítám…</div>
+      <h3>Stav monitoringu</h3>
+      <div id="monitoring-pill" class="status-pill">…</div>
+      <h3>Posledních 20 běhů ventilátoru</h3>
+      <table id="vent-table"><thead>
+        <tr><th>Start</th><th>Stop</th><th>Délka [s]</th></tr>
+      </thead><tbody></tbody></table>
+    </section>
+
+    <!-- Zavlaha -->
+    <section id="tab-zavlaha" class="tab-panel">
+      <h2>Ruční závlaha</h2>
+      <form id="zavlaha-form">
+        <label>Zóna:
+          <select name="zone">
+            <option value="kapkova_a">kapkova_a</option>
+            <option value="kapkova_b">kapkova_b</option>
+            <option value="both">obě postupně</option>
+          </select>
+        </label>
+        <label>Doba (s):
+          <input type="number" name="duration" min="10" max="600" value="60">
+        </label>
+        <button type="submit">Spustit</button>
+      </form>
+      <pre id="zavlaha-output">—</pre>
+    </section>
+
+    <!-- Config -->
+    <section id="tab-config" class="tab-panel">
+      <h2>Konfigurace (config.json)</h2>
+      <button id="config-reload">Načíst z Pi</button>
+      <button id="config-save">Uložit na Pi</button>
+      <span id="config-status"></span>
+      <form id="config-form">
+        <fieldset>
+          <legend>Teplotní prahy</legend>
+          <label>Tepelný ventilátor – zapnout pod (°C)
+            <input name="tep_vent_low_temp" type="number" step="0.1"></label>
+          <label>Tepelný ventilátor – vypnout nad (°C)
+            <input name="tep_vent_high_temp" type="number" step="0.1"></label>
+          <label>Větrák – zapnout nad (°C)
+            <input name="vetrak_low_temp" type="number" step="0.1"></label>
+          <label>Závlaha – min. teplota (°C)
+            <input name="kapkova_zavlaha_min_temp" type="number" step="0.1"></label>
+        </fieldset>
+        <fieldset>
+          <legend>Aktivní moduly (params)</legend>
+          <label><input type="checkbox" name="mod_teplota"> teplota</label>
+          <label><input type="checkbox" name="mod_tepelny_ventilator"> tepelny_ventilator</label>
+          <label><input type="checkbox" name="mod_vetrak"> vetrak</label>
+          <label><input type="checkbox" name="mod_kapkova_zavlaha"> kapkova_zavlaha</label>
+        </fieldset>
+        <fieldset>
+          <legend>Závlaha – zóny</legend>
+          <div id="zones-editor"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Plánované hodiny závlahy</legend>
+          <label>Hodiny (čárkou oddělené, 0–23)
+            <input name="hodiny" type="text" placeholder="8,20"></label>
+        </fieldset>
+      </form>
+    </section>
+
+    <!-- Monitoring -->
+    <section id="tab-monitoring" class="tab-panel">
+      <h2>Správa monitoringu</h2>
+      <div class="btn-row">
+        <button data-action="start">Start</button>
+        <button data-action="stop">Stop</button>
+        <button data-action="restart">Restart</button>
+      </div>
+      <pre id="monitoring-output">—</pre>
+      <h3>Logy</h3>
+      <label>Log:
+        <select id="log-select"></select>
+      </label>
+      <label>Řádků:
+        <input id="log-lines" type="number" value="50" min="1" max="500">
+      </label>
+      <button id="log-load">Načíst</button>
+      <pre id="log-output">—</pre>
+    </section>
+
+    <!-- Grafy -->
+    <section id="tab-grafy" class="tab-panel">
+      <h2>Historické grafy</h2>
+      <label>Tabulka:
+        <select id="chart-table"></select>
+      </label>
+      <label>Hodin zpět:
+        <input id="chart-hours" type="number" value="24" min="1" max="720">
+      </label>
+      <button id="chart-load">Vykreslit</button>
+      <canvas id="chart-canvas" height="120"></canvas>
+    </section>
+
+    <!-- Scripts -->
+    <section id="tab-scripts" class="tab-panel">
+      <h2>Editor skriptů</h2>
+      <label>Soubor:
+        <select id="script-select"></select>
+      </label>
+      <button id="script-load">Načíst</button>
+      <button id="script-save">Uložit</button>
+      <span id="script-status"></span>
+      <textarea id="script-editor" rows="25" spellcheck="false"></textarea>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="app.js?v=1"></script>
+</body>
+</html>
