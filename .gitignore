@@ -6,6 +6,8 @@ venv/
 node_modules/
 dist/
 data/logs/*.log
+# SSHFS mount of Raspberry Pi /usr/local/bin
+pi-scripts/
 .vscode/
 .idea/
 *.swp

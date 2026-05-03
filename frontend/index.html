@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Skleník – řízení</title>
-  <link rel="stylesheet" href="style.css?v=1">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
   <header>
@@ -73,6 +73,7 @@
         <fieldset>
           <legend>Aktivní moduly (params)</legend>
           <label><input type="checkbox" name="mod_teplota"> teplota</label>
+          <label><input type="checkbox" name="mod_vlhkost_pudy"> vlhkost_pudy</label>
           <label><input type="checkbox" name="mod_tepelny_ventilator"> tepelny_ventilator</label>
           <label><input type="checkbox" name="mod_vetrak"> vetrak</label>
           <label><input type="checkbox" name="mod_kapkova_zavlaha"> kapkova_zavlaha</label>
@@ -80,6 +81,11 @@
         <fieldset>
           <legend>Závlaha – zóny</legend>
           <div id="zones-editor"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Vlhkost půdy – senzory (Arduino A0–A3)</legend>
+          <div id="sensors-editor"></div>
+          <p class="hint">Tabulka v DB musí existovat (formát <code>vlhkost_pudy_*</code>) a sloupce <code>timestamp, vlhkost</code>.</p>
         </fieldset>
         <fieldset>
           <legend>Plánované hodiny závlahy</legend>
@@ -136,6 +142,6 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="app.js?v=1"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>

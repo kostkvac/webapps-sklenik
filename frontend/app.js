@@ -181,6 +181,7 @@ function fillConfigForm(cfg) {
   }
   const params = (cfg.params || []).join(" ").split(/\s+/);
   form.mod_teplota.checked = params.includes("teplota");
+  form.mod_vlhkost_pudy.checked = params.includes("vlhkost_pudy");
   form.mod_tepelny_ventilator.checked = params.includes("tepelny_ventilator");
   form.mod_vetrak.checked = params.includes("vetrak");
   form.mod_kapkova_zavlaha.checked = params.includes("kapkova_zavlaha");
@@ -193,6 +194,19 @@ function fillConfigForm(cfg) {
       <span class="name">${z.name}</span>
       pin: <input type="number" data-k="pin" value="${z.pin}">
       duration: <input type="number" data-k="duration" min="10" max="600" value="${z.duration}">
+    </div>`).join("");
+
+  const sensorsDiv = document.getElementById("sensors-editor");
+  const existing = cfg.vlhkost_pudy_senzory || [];
+  const sensors = ["A0", "A1", "A2", "A3"].map(p =>
+    existing.find(s => s.port === p) || { port: p, table: "", nazev: "", enabled: false }
+  );
+  sensorsDiv.innerHTML = sensors.map(s => `
+    <div class="sensor-row" data-port="${s.port}">
+      <span class="port">${s.port}</span>
+      <label><input type="checkbox" data-k="enabled" ${s.enabled ? "checked" : ""}> aktivní</label>
+      tabulka: <input type="text" data-k="table" placeholder="vlhkost_pudy_*" value="${s.table || ""}">
+      název: <input type="text" data-k="nazev" placeholder="popis (volitelné)" value="${s.nazev || ""}">
     </div>`).join("");
 }
 
@@ -211,6 +225,7 @@ document.getElementById("config-save").addEventListener("click", async () => {
   // params – use single space-separated string for backward compatibility
   const mods = [];
   if (form.mod_teplota.checked) mods.push("teplota");
+  if (form.mod_vlhkost_pudy.checked) mods.push("vlhkost_pudy");
   if (form.mod_tepelny_ventilator.checked) mods.push("tepelny_ventilator");
   if (form.mod_vetrak.checked) mods.push("vetrak");
   if (form.mod_kapkova_zavlaha.checked) mods.push("kapkova_zavlaha");
@@ -225,6 +240,13 @@ document.getElementById("config-save").addEventListener("click", async () => {
     z.duration = parseInt(row.querySelector('[data-k=duration]').value);
     return z;
   });
+
+  newCfg.vlhkost_pudy_senzory = Array.from(document.querySelectorAll("#sensors-editor .sensor-row")).map(row => ({
+    port: row.dataset.port,
+    enabled: row.querySelector('[data-k=enabled]').checked,
+    table: row.querySelector('[data-k=table]').value.trim(),
+    nazev: row.querySelector('[data-k=nazev]').value.trim(),
+  }));
 
   status.textContent = "Ukládám…";
   try {

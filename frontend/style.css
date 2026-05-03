@@ -104,3 +104,9 @@ textarea { width: 100%; font-family: "Fira Code", Consolas, monospace; font-size
 #zones-editor .zone-row { display: flex; gap: 0.5rem; align-items: center; margin: 0.3rem 0; }
 #zones-editor .zone-row input { width: 80px; }
 #zones-editor .zone-row .name { min-width: 110px; font-weight: 600; }
+
+#sensors-editor .sensor-row { display: flex; gap: 0.5rem; align-items: center; margin: 0.3rem 0; flex-wrap: wrap; }
+#sensors-editor .sensor-row .port { min-width: 40px; font-weight: 600; color: #2d6a4f; }
+#sensors-editor .sensor-row input[type=text] { width: 180px; }
+.hint { font-size: 0.8rem; color: #666; margin: 0.3rem 0 0; }
+.hint code { background: #eee; padding: 0 0.3rem; border-radius: 3px; }

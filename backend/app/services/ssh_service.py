@@ -16,9 +16,9 @@ logger = logging.getLogger("sklenik.ssh")
 
 # --- Whitelists ---------------------------------------------------------------
 ALLOWED_ZONES = {"kapkova_a", "kapkova_b"}
-ALLOWED_LOGS = {"monitoring", "tepelny_ventilator", "kapkova_zavlaha", "teplota"}
+ALLOWED_LOGS = {"monitoring", "tepelny_ventilator", "kapkova_zavlaha", "teplota", "vlhkost_pudy"}
 ALLOWED_MONITORING_ACTIONS = {"start", "stop", "restart"}
-ALLOWED_MODULES = {"teplota", "tepelny_ventilator", "vetrak", "kapkova_zavlaha"}
+ALLOWED_MODULES = {"teplota", "vlhkost_pudy", "tepelny_ventilator", "vetrak", "kapkova_zavlaha"}
 DURATION_MIN, DURATION_MAX = 10, 600
 
 CONFIG_PATH = "/usr/local/bin/config.json"
@@ -217,3 +217,20 @@ def _validate_config(cfg: dict) -> None:
     for h in hours:
         if not isinstance(h, int) or not 0 <= h <= 23:
             raise SSHError(f"Invalid hour: {h}")
+
+    sensors = cfg.get("vlhkost_pudy_senzory", [])
+    if not isinstance(sensors, list):
+        raise SSHError("vlhkost_pudy_senzory must be a list")
+    allowed_ports = {"A0", "A1", "A2", "A3"}
+    for s in sensors:
+        if not isinstance(s, dict):
+            raise SSHError("sensor must be object")
+        if s.get("port") not in allowed_ports:
+            raise SSHError(f"Invalid sensor port: {s.get('port')}")
+        table = s.get("table", "")
+        if not isinstance(table, str):
+            raise SSHError("sensor.table must be string")
+        if table and not re.match(r"^vlhkost_pudy_[a-z0-9_]+$", table):
+            raise SSHError(f"Invalid sensor.table name: {table}")
+        if not isinstance(s.get("enabled", False), bool):
+            raise SSHError("sensor.enabled must be bool")

@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
 # Active sensors only (per prompt)
 TEMP_TABLES = ["teplota_dolni", "teplota_horni", "teplota_venkovni"]
-HUMIDITY_TABLES = ["vlhkost_pudy_sadba"]
+HUMIDITY_TABLES = ["vlhkost_pudy_sadba", "vlhkost_pudy_zahon"]
 HISTORY_TABLES = TEMP_TABLES + HUMIDITY_TABLES + ["prutok"]
 
 
