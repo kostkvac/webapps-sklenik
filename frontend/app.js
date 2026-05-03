@@ -182,6 +182,7 @@ function fillConfigForm(cfg) {
   const params = (cfg.params || []).join(" ").split(/\s+/);
   form.mod_teplota.checked = params.includes("teplota");
   form.mod_vlhkost_pudy.checked = params.includes("vlhkost_pudy");
+  form.mod_prutok.checked = params.includes("prutok");
   form.mod_tepelny_ventilator.checked = params.includes("tepelny_ventilator");
   form.mod_vetrak.checked = params.includes("vetrak");
   form.mod_kapkova_zavlaha.checked = params.includes("kapkova_zavlaha");
@@ -226,6 +227,7 @@ document.getElementById("config-save").addEventListener("click", async () => {
   const mods = [];
   if (form.mod_teplota.checked) mods.push("teplota");
   if (form.mod_vlhkost_pudy.checked) mods.push("vlhkost_pudy");
+  if (form.mod_prutok.checked) mods.push("prutok");
   if (form.mod_tepelny_ventilator.checked) mods.push("tepelny_ventilator");
   if (form.mod_vetrak.checked) mods.push("vetrak");
   if (form.mod_kapkova_zavlaha.checked) mods.push("kapkova_zavlaha");

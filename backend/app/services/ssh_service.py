@@ -16,9 +16,9 @@ logger = logging.getLogger("sklenik.ssh")
 
 # --- Whitelists ---------------------------------------------------------------
 ALLOWED_ZONES = {"kapkova_a", "kapkova_b"}
-ALLOWED_LOGS = {"monitoring", "tepelny_ventilator", "kapkova_zavlaha", "teplota", "vlhkost_pudy"}
-ALLOWED_MONITORING_ACTIONS = {"start", "stop", "restart"}
-ALLOWED_MODULES = {"teplota", "vlhkost_pudy", "tepelny_ventilator", "vetrak", "kapkova_zavlaha"}
+ALLOWED_LOGS = {"monitoring", "tepelny_ventilator", "kapkova_zavlaha", "teplota", "vlhkost_pudy", "prutok"}
+ALLOWED_MONITORING_ACTIONS = {"start", "stop", "restart", "status"}
+ALLOWED_MODULES = {"teplota", "vlhkost_pudy", "tepelny_ventilator", "vetrak", "kapkova_zavlaha", "prutok"}
 DURATION_MIN, DURATION_MAX = 10, 600
 
 CONFIG_PATH = "/usr/local/bin/config.json"
