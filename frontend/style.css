@@ -110,3 +110,7 @@ textarea { width: 100%; font-family: "Fira Code", Consolas, monospace; font-size
 #sensors-editor .sensor-row input[type=text] { width: 180px; }
 .hint { font-size: 0.8rem; color: #666; margin: 0.3rem 0 0; }
 .hint code { background: #eee; padding: 0 0.3rem; border-radius: 3px; }
+
+.chart-block { margin-bottom: 2rem; }
+.chart-block h3 { margin: 0 0 0.5rem; font-size: 1rem; color: #1d3557; }
+.chart-controls { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.5rem; }

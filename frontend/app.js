@@ -316,9 +316,77 @@ async function refreshMonitoring() {
 // ---------- Grafy ----------
 const CHART_TABLES = [
   "teplota_dolni", "teplota_horni", "teplota_venkovni",
-  "vlhkost_pudy_sadba", "prutok",
+  "vlhkost_pudy_sadba", "vlhkost_pudy_zahon", "prutok",
 ];
 let chartInstance = null;
+let tempChartInstance = null;
+
+// --- Přehled teplot + prahy ---
+document.getElementById("temp-load").addEventListener("click", () => {
+  const hours = parseInt(document.getElementById("temp-hours").value) || 24;
+  drawTempOverview(hours);
+});
+
+async function drawTempOverview(hours) {
+  const btn = document.getElementById("temp-load");
+  btn.disabled = true;
+  btn.textContent = "Načítám…";
+  try {
+    const [d, h, v, cfgResp] = await Promise.all([
+      api(`/dashboard/history?table=teplota_dolni&hours=${hours}`),
+      api(`/dashboard/history?table=teplota_horni&hours=${hours}`),
+      api(`/dashboard/history?table=teplota_venkovni&hours=${hours}`),
+      api("/config"),
+    ]);
+    const cfg = cfgResp.config;
+    const labels = d.points.map(p => fmtTs(p.t));
+    const n = labels.length;
+
+    const threshold = (label, value, color) => ({
+      label: `${label} (${value}°C)`,
+      data: Array(n).fill(value),
+      borderColor: color,
+      borderDash: [6, 4],
+      borderWidth: 1.5,
+      pointRadius: 0,
+      fill: false,
+      tension: 0,
+      order: 10,
+    });
+
+    const datasets = [
+      { label: "Dolní", data: d.points.map(p => p.v), borderColor: "#e63946", backgroundColor: "rgba(230,57,70,0.08)", fill: false, tension: 0.2, pointRadius: 0 },
+      { label: "Horní", data: h.points.map(p => p.v), borderColor: "#ff9f1c", fill: false, tension: 0.2, pointRadius: 0 },
+      { label: "Venkovní", data: v.points.map(p => p.v), borderColor: "#457b9d", fill: false, tension: 0.2, pointRadius: 0 },
+      threshold("Tep.vent. zapnout pod", cfg.tep_vent_low_temp, "#52b788"),
+      threshold("Tep.vent. vypnout nad", cfg.tep_vent_high_temp, "#1d3557"),
+      threshold("Větrák zapnout nad", cfg.vetrak_low_temp, "#e9c46a"),
+    ];
+
+    const ctx = document.getElementById("temp-canvas").getContext("2d");
+    if (tempChartInstance) tempChartInstance.destroy();
+    tempChartInstance = new Chart(ctx, {
+      type: "line",
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        interaction: { mode: "index", intersect: false },
+        scales: {
+          x: { ticks: { maxTicksLimit: 10 } },
+          y: { title: { display: true, text: "°C" } },
+        },
+        plugins: {
+          legend: { position: "bottom" },
+        },
+      },
+    });
+  } catch (e) {
+    alert("Chyba: " + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Vykreslit";
+  }
+}
 
 function populateChartTables() {
   const sel = document.getElementById("chart-table");

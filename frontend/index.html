@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Skleník – řízení</title>
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
   <header>
@@ -119,14 +119,31 @@
     <!-- Grafy -->
     <section id="tab-grafy" class="tab-panel">
       <h2>Historické grafy</h2>
-      <label>Tabulka:
-        <select id="chart-table"></select>
-      </label>
-      <label>Hodin zpět:
-        <input id="chart-hours" type="number" value="24" min="1" max="720">
-      </label>
-      <button id="chart-load">Vykreslit</button>
-      <canvas id="chart-canvas" height="120"></canvas>
+
+      <div class="chart-block">
+        <h3>Přehled teplot + prahy regulace</h3>
+        <div class="chart-controls">
+          <label>Hodin zpět:
+            <input id="temp-hours" type="number" value="24" min="1" max="720">
+          </label>
+          <button id="temp-load">Vykreslit</button>
+        </div>
+        <canvas id="temp-canvas" height="130"></canvas>
+      </div>
+
+      <div class="chart-block">
+        <h3>Jednotlivé senzory</h3>
+        <div class="chart-controls">
+          <label>Tabulka:
+            <select id="chart-table"></select>
+          </label>
+          <label>Hodin zpět:
+            <input id="chart-hours" type="number" value="24" min="1" max="720">
+          </label>
+          <button id="chart-load">Vykreslit</button>
+        </div>
+        <canvas id="chart-canvas" height="120"></canvas>
+      </div>
     </section>
 
     <!-- Scripts -->
@@ -143,6 +160,6 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="app.js?v=4"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>
