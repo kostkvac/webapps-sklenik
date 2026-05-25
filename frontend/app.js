@@ -187,14 +187,15 @@ function fillConfigForm(cfg) {
   form.mod_vetrak.checked = params.includes("vetrak");
   form.mod_kapkova_zavlaha.checked = params.includes("kapkova_zavlaha");
 
-  form.hodiny.value = (cfg.kapkova_zavlaha_hodiny || []).join(",");
+  form.hodiny_placeholder = null; // removed – hodiny are per zone
 
   const zonesDiv = document.getElementById("zones-editor");
   zonesDiv.innerHTML = (cfg.kapkova_zavlaha_zones || []).map((z, i) => `
     <div class="zone-row" data-i="${i}">
       <span class="name">${z.name}</span>
       pin: <input type="number" data-k="pin" value="${z.pin}">
-      duration: <input type="number" data-k="duration" min="10" max="600" value="${z.duration}">
+      duration (s): <input type="number" data-k="duration" min="10" max="600" value="${z.duration}">
+      hodiny: <input type="text" data-k="hodiny" placeholder="8,20" value="${(z.hodiny || []).join(",")}" style="width:12em">
     </div>`).join("");
 
   const sensorsDiv = document.getElementById("sensors-editor");
@@ -233,13 +234,14 @@ document.getElementById("config-save").addEventListener("click", async () => {
   if (form.mod_kapkova_zavlaha.checked) mods.push("kapkova_zavlaha");
   newCfg.params = [mods.join(" ")];
 
-  newCfg.kapkova_zavlaha_hodiny = form.hodiny.value
-    .split(",").map(s => s.trim()).filter(Boolean).map(Number).filter(n => !isNaN(n));
+  delete newCfg.kapkova_zavlaha_hodiny; // přesunuto do per-zóna hodiny
 
   newCfg.kapkova_zavlaha_zones = Array.from(document.querySelectorAll("#zones-editor .zone-row")).map((row, i) => {
     const z = { ...currentConfig.kapkova_zavlaha_zones[i] };
     z.pin = parseInt(row.querySelector('[data-k=pin]').value);
     z.duration = parseInt(row.querySelector('[data-k=duration]').value);
+    z.hodiny = row.querySelector('[data-k=hodiny]').value
+      .split(",").map(s => s.trim()).filter(Boolean).map(Number).filter(n => !isNaN(n) && n >= 0 && n <= 23);
     return z;
   });
 

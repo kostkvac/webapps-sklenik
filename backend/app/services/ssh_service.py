@@ -210,13 +210,12 @@ def _validate_config(cfg: dict) -> None:
         dur = z.get("duration")
         if not isinstance(dur, int) or not DURATION_MIN <= dur <= DURATION_MAX:
             raise SSHError(f"zone.duration out of range: {dur}")
-
-    hours = cfg.get("kapkova_zavlaha_hodiny", [])
-    if not isinstance(hours, list):
-        raise SSHError("kapkova_zavlaha_hodiny must be a list")
-    for h in hours:
-        if not isinstance(h, int) or not 0 <= h <= 23:
-            raise SSHError(f"Invalid hour: {h}")
+        zone_hours = z.get("hodiny", [])
+        if not isinstance(zone_hours, list):
+            raise SSHError(f"zone.hodiny must be a list (zone: {z.get('name')})")
+        for h in zone_hours:
+            if not isinstance(h, int) or not 0 <= h <= 23:
+                raise SSHError(f"Invalid hour in zone {z.get('name')}: {h}")
 
     sensors = cfg.get("vlhkost_pudy_senzory", [])
     if not isinstance(sensors, list):
