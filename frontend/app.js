@@ -82,7 +82,8 @@ async function refreshDashboard() {
     document.getElementById("latest-cards").textContent = "Chyba: " + e.message;
   }
   refreshMonitoringPill();
-  loadVentilatorLog();
+  const hours = parseInt(document.getElementById("activity-hours")?.value || "48");
+  loadActivity(hours);
 }
 
 function renderCard(key, rec) {
@@ -115,45 +116,86 @@ async function refreshMonitoringPill() {
   }
 }
 
-async function loadVentilatorLog() {
+const ACTIVITY_ICONS = {
+  tepelny_ventilator: { icon: "🔥", cls: "act-tepelny" },
+  vetrak:             { icon: "💨", cls: "act-vetrak" },
+  kapkova_zavlaha:    { icon: "💧", cls: "act-zavlaha" },
+};
+
+function fmtDur(s) {
+  if (s == null) return "—";
+  if (s < 60) return s + "s";
+  return Math.floor(s / 60) + "m " + (s % 60) + "s";
+}
+
+async function loadActivity(hours) {
+  const feed = document.getElementById("activity-feed");
   try {
-    const j = await api("/dashboard/ventilator-log?limit=20");
-    const tbody = document.querySelector("#vent-table tbody");
-    tbody.innerHTML = j.rows.map(r => `<tr>
-      <td>${fmtTs(r.start)}</td><td>${fmtTs(r.stop)}</td>
-      <td>${r.duration_s ?? "—"}</td></tr>`).join("");
-  } catch (e) { /* ignore */ }
+    const j = await api(`/dashboard/activity?hours=${hours}`);
+    if (!j.events.length) { feed.innerHTML = "<p style='color:#888'>Žádné události.</p>"; return; }
+    feed.innerHTML = j.events.map(ev => {
+      const meta = ACTIVITY_ICONS[ev.type] || { icon: "📌", cls: "" };
+      const start = fmtTs(ev.start);
+      const stop  = ev.stop ? fmtTs(ev.stop) : "probíhá…";
+      const dur   = fmtDur(ev.duration_s);
+      const badge = ev.source === "manual"
+        ? `<span class="act-badge act-manual">ruční</span>`
+        : ev.source === "scheduled"
+          ? `<span class="act-badge act-sched">auto</span>`
+          : "";
+      return `<div class="act-row ${meta.cls}">
+        <span class="act-icon">${meta.icon}</span>
+        <div class="act-body">
+          <span class="act-label">${ev.label}</span>${badge}
+          <span class="act-time">${start} → ${stop} <em>(${dur})</em></span>
+        </div>
+      </div>`;
+    }).join("");
+  } catch (e) {
+    feed.innerHTML = `<p style='color:#c00'>Chyba: ${e.message}</p>`;
+  }
 }
 
 // ---------- Zavlaha ----------
+let _zavlahaPoller = null;
+
+function startZavlahaPolling(out, submit) {
+  if (_zavlahaPoller) clearInterval(_zavlahaPoller);
+  _zavlahaPoller = setInterval(async () => {
+    try {
+      const s = await api("/ssh/zavlaha/running");
+      if (!s.running) {
+        clearInterval(_zavlahaPoller);
+        _zavlahaPoller = null;
+        out.textContent += "\n✓ Dokončeno.";
+        submit.disabled = false;
+      }
+    } catch {
+      clearInterval(_zavlahaPoller);
+      _zavlahaPoller = null;
+      submit.disabled = false;
+    }
+  }, 3000);
+}
+
 document.getElementById("zavlaha-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const fd = new FormData(e.target);
   const zone = fd.get("zone");
   const duration = parseInt(fd.get("duration"));
   const out = document.getElementById("zavlaha-output");
-  out.textContent = "Spouštím…";
   const submit = e.target.querySelector("button[type=submit]");
+  out.textContent = "Spouštím…";
   submit.disabled = true;
   try {
-    if (zone === "both") {
-      const r1 = await api("/ssh/zavlaha", {
-        method: "POST", body: JSON.stringify({ zone: "kapkova_a", duration }),
-      });
-      const r2 = await api("/ssh/zavlaha", {
-        method: "POST", body: JSON.stringify({ zone: "kapkova_b", duration }),
-      });
-      out.textContent = "=== kapkova_a ===\n" + (r1.stdout || "") + (r1.stderr || "")
-        + "\n\n=== kapkova_b ===\n" + (r2.stdout || "") + (r2.stderr || "");
-    } else {
-      const r = await api("/ssh/zavlaha", {
-        method: "POST", body: JSON.stringify({ zone, duration }),
-      });
-      out.textContent = (r.stdout || "") + (r.stderr ? "\n[stderr]\n" + r.stderr : "");
-    }
+    await api("/ssh/zavlaha", {
+      method: "POST", body: JSON.stringify({ zone, duration }),
+    });
+    const label = zone === "both" ? "kapkova_a + kapkova_b" : zone;
+    out.textContent = `Závlaha spuštěna (${label}, ${duration}s).\nČekám na dokončení…`;
+    startZavlahaPolling(out, submit);
   } catch (err) {
     out.textContent = "Chyba: " + err.message;
-  } finally {
     submit.disabled = false;
   }
 });
@@ -193,9 +235,9 @@ function fillConfigForm(cfg) {
   zonesDiv.innerHTML = (cfg.kapkova_zavlaha_zones || []).map((z, i) => `
     <div class="zone-row" data-i="${i}">
       <span class="name">${z.name}</span>
-      pin: <input type="number" data-k="pin" value="${z.pin}">
-      duration (s): <input type="number" data-k="duration" min="10" max="600" value="${z.duration}">
-      hodiny: <input type="text" data-k="hodiny" placeholder="8,20" value="${(z.hodiny || []).join(",")}" style="width:12em">
+      <label>pin <input type="number" data-k="pin" value="${z.pin}"></label>
+      <label>duration (s) <input type="number" data-k="duration" min="10" max="600" value="${z.duration}"></label>
+      <label>hodiny <input type="text" data-k="hodiny" placeholder="8,20" value="${(z.hodiny || []).join(",")}" style="width:12em"></label>
     </div>`).join("");
 
   const sensorsDiv = document.getElementById("sensors-editor");
@@ -468,3 +510,7 @@ checkApi();
 refreshDashboard();
 setInterval(refreshDashboard, 30000);
 setInterval(checkApi, 60000);
+
+document.getElementById("activity-hours")?.addEventListener("change", (e) => {
+  loadActivity(parseInt(e.target.value));
+});

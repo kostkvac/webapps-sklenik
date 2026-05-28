@@ -95,3 +95,57 @@ def ventilator_log(limit: int = Query(20, ge=1, le=200), db: Session = Depends(g
             for r in rows
         ]
     }
+
+
+@router.get("/activity")
+def activity(
+    hours: int = Query(48, ge=1, le=24 * 30),
+    db: Session = Depends(get_db),
+) -> dict:
+    """Unified chronological activity feed from all event log tables."""
+    since = datetime.now() - timedelta(hours=hours)
+    rows = db.execute(
+        text("""
+            SELECT 'tepelny_ventilator' AS type,
+                   'Tepelný ventilátor' AS label,
+                   start_time, stop_time, NULL AS zone, NULL AS source
+            FROM ventilator_log WHERE start_time >= :since
+            UNION ALL
+            SELECT 'kapkova_zavlaha',
+                   CONCAT('Závlaha – ', zone),
+                   start_time, stop_time, zone, source
+            FROM kapkova_zavlaha_log WHERE start_time >= :since
+            UNION ALL
+            SELECT 'vetrak',
+                   'Větráček (ochlazování)',
+                   start_time, stop_time, NULL, NULL
+            FROM vetrak_log WHERE start_time >= :since
+            ORDER BY start_time DESC
+            LIMIT 200
+        """),
+        {"since": since},
+    ).fetchall()
+
+    def _fmt(dt) -> str | None:
+        return dt.isoformat() if dt else None
+
+    def _dur(start, stop) -> int | None:
+        if start and stop:
+            return int((stop - start).total_seconds())
+        return None
+
+    return {
+        "hours": hours,
+        "events": [
+            {
+                "type": r.type,
+                "label": r.label,
+                "start": _fmt(r.start_time),
+                "stop": _fmt(r.stop_time),
+                "duration_s": _dur(r.start_time, r.stop_time),
+                "zone": r.zone,
+                "source": r.source,
+            }
+            for r in rows
+        ],
+    }

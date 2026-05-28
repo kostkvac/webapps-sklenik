@@ -21,6 +21,14 @@ def _result_to_dict(res: ssh_service.SSHResult) -> dict:
             "stdout": res.stdout, "stderr": res.stderr}
 
 
+@router.get("/zavlaha/running")
+def zavlaha_running():
+    try:
+        return ssh_service.zavlaha_running()
+    except ssh_service.SSHError as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
 @router.post("/zavlaha")
 def run_zavlaha(req: ZavlahaRequest):
     try:

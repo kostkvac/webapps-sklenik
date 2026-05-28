@@ -4,11 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Skleník – řízení</title>
-  <link rel="stylesheet" href="style.css?v=8">
+  <link rel="stylesheet" href="style.css?v=12">
 </head>
 <body>
   <header>
     <h1>🌱 Skleník</h1>
+    <div class="nav-scroller">
     <nav>
       <button class="tab active" data-tab="dashboard">Dashboard</button>
       <button class="tab" data-tab="zavlaha">Závlaha</button>
@@ -17,6 +18,7 @@
       <button class="tab" data-tab="grafy">Grafy</button>
       <button class="tab" data-tab="scripts">Skripty</button>
     </nav>
+    </div>
     <div class="status-pill" id="api-status">…</div>
   </header>
 
@@ -27,10 +29,14 @@
       <div class="cards" id="latest-cards">Načítám…</div>
       <h3>Stav monitoringu</h3>
       <div id="monitoring-pill" class="status-pill">…</div>
-      <h3>Posledních 20 běhů ventilátoru</h3>
-      <table id="vent-table"><thead>
-        <tr><th>Start</th><th>Stop</th><th>Délka [s]</th></tr>
-      </thead><tbody></tbody></table>
+      <h3>Aktivita
+        <select id="activity-hours" style="font-size:0.85rem;margin-left:0.5rem">
+          <option value="24">posledních 24h</option>
+          <option value="48" selected>posledních 48h</option>
+          <option value="168">posledních 7 dní</option>
+        </select>
+      </h3>
+      <div id="activity-feed">Načítám…</div>
     </section>
 
     <!-- Zavlaha -->
@@ -155,6 +161,6 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=12"></script>
 </body>
 </html>

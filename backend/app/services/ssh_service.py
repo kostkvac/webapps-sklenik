@@ -15,7 +15,7 @@ from app.config import sklenik_settings
 logger = logging.getLogger("sklenik.ssh")
 
 # --- Whitelists ---------------------------------------------------------------
-ALLOWED_ZONES = {"kapkova_a", "kapkova_b"}
+ALLOWED_ZONES = {"kapkova_a", "kapkova_b", "both"}
 ALLOWED_LOGS = {"monitoring", "tepelny_ventilator", "kapkova_zavlaha", "teplota", "vlhkost_pudy", "prutok"}
 ALLOWED_MONITORING_ACTIONS = {"start", "stop", "restart", "status"}
 ALLOWED_MODULES = {"teplota", "vlhkost_pudy", "tepelny_ventilator", "vetrak", "kapkova_zavlaha", "prutok"}
@@ -89,14 +89,39 @@ def monitoring_action(action: str) -> SSHResult:
     return _exec(f"python /usr/local/bin/monitoring_control.py {action}", timeout=60)
 
 
+ZAVLAHA_LOCK = "/tmp/kapkova_zavlaha.lock"
+
+
 def run_zavlaha(zone: str, duration: int) -> SSHResult:
     if zone not in ALLOWED_ZONES:
         raise SSHError(f"Invalid zone: {zone}")
     if not isinstance(duration, int) or not DURATION_MIN <= duration <= DURATION_MAX:
         raise SSHError(f"Invalid duration: {duration}")
-    cmd = f"python /usr/local/bin/kapkova_zavlaha.py --zone {zone} --duration {duration}"
-    # blocking call; allow up to duration + 30s buffer
-    return _exec(cmd, timeout=duration + 30)
+    log = f"{LOGS_DIR}/kapkova_zavlaha.log"
+    base = "python /usr/local/bin/kapkova_zavlaha.py --manual"
+    if zone == "both":
+        # Chain both zones sequentially in a single background process
+        inner = (f"{base} --zone kapkova_a --duration {duration} && "
+                 f"{base} --zone kapkova_b --duration {duration}")
+        cmd = f"nohup sh -c '{inner}' >>{log} 2>&1 </dev/null &"
+    else:
+        cmd = f"nohup {base} --zone {zone} --duration {duration} >>{log} 2>&1 </dev/null &"
+    return _exec(cmd, timeout=15)
+
+
+def zavlaha_running() -> dict:
+    """Check if irrigation is currently running via lock file."""
+    res = _exec(
+        f"if [ -f {ZAVLAHA_LOCK} ]; then "
+        f"  pid=$(cat {ZAVLAHA_LOCK}); "
+        f"  if kill -0 $pid 2>/dev/null; then echo running $pid; "
+        f"  else echo idle; fi; "
+        f"else echo idle; fi"
+    )
+    parts = res.stdout.strip().split()
+    running = bool(parts) and parts[0] == "running"
+    pid = int(parts[1]) if running and len(parts) > 1 else None
+    return {"running": running, "pid": pid}
 
 
 def tail_log(log_name: str, lines: int = 50) -> str:
