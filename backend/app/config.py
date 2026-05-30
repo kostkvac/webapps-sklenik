@@ -18,6 +18,13 @@ class SklenikSettings(SharedSettings):
 
     LOGS_DIR: str = Field(default="/opt/webapps/sklenik/data/logs", env="LOGS_DIR")
 
+    # Weather proxy – sdílíme cache s trávník backendem
+    WEATHER_PROXY_URL: str = Field(
+        default="http://127.0.0.1:8006/api/weather",
+        env="WEATHER_PROXY_URL",
+    )
+    WEATHER_CACHE_MINUTES: int = Field(default=60, env="WEATHER_CACHE_MINUTES")
+
     class Config:
         env_file = "/opt/webapps/sklenik/.env"
         case_sensitive = True

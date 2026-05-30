@@ -12,3 +12,4 @@ pi-scripts/
 .idea/
 *.swp
 .DS_Store
+backups/

@@ -19,7 +19,10 @@ ALLOWED_ZONES = {"kapkova_a", "kapkova_b", "both"}
 ALLOWED_LOGS = {"monitoring", "tepelny_ventilator", "kapkova_zavlaha", "teplota", "vlhkost_pudy", "prutok"}
 ALLOWED_MONITORING_ACTIONS = {"start", "stop", "restart", "status"}
 ALLOWED_MODULES = {"teplota", "vlhkost_pudy", "tepelny_ventilator", "vetrak", "kapkova_zavlaha", "prutok"}
+ALLOWED_SOURCES = {"manual", "scheduled", "calendar", "profile"}
 DURATION_MIN, DURATION_MAX = 10, 600
+STEP_DURATION_MIN, STEP_DURATION_MAX = 1, 3600
+PROFILE_NAME_RE = re.compile(r"^[a-zA-Z0-9_\-]+$")
 
 CONFIG_PATH = "/usr/local/bin/config.json"
 SCRIPTS_DIR = "/usr/local/bin"
@@ -106,6 +109,37 @@ def run_zavlaha(zone: str, duration: int) -> SSHResult:
         cmd = f"nohup sh -c '{inner}' >>{log} 2>&1 </dev/null &"
     else:
         cmd = f"nohup {base} --zone {zone} --duration {duration} >>{log} 2>&1 </dev/null &"
+    return _exec(cmd, timeout=15)
+
+
+def run_zavlaha_profile(steps: list[dict], source: str = "profile",
+                        profile_name: str = "profil") -> SSHResult:
+    """Spustí profil = sekvenci kroků atomicky pod jedním lockem.
+
+    steps: list of {"zone": str, "duration": int}
+    """
+    if source not in ALLOWED_SOURCES:
+        raise SSHError(f"Invalid source: {source}")
+    if not PROFILE_NAME_RE.match(profile_name or "profil"):
+        raise SSHError(f"Invalid profile_name: {profile_name}")
+    if not steps:
+        raise SSHError("Empty profile steps")
+    parts = []
+    for i, st in enumerate(steps):
+        zname = st.get("zone")
+        dur = st.get("duration")
+        if zname not in ALLOWED_ZONES or zname == "both":
+            raise SSHError(f"step {i}: invalid zone {zname!r}")
+        if not isinstance(dur, int) or not STEP_DURATION_MIN <= dur <= STEP_DURATION_MAX:
+            raise SSHError(f"step {i}: invalid duration {dur!r}")
+        parts.append(f"{zname}:{dur}")
+    steps_arg = ",".join(parts)
+    log = f"{LOGS_DIR}/kapkova_zavlaha.log"
+    cmd = (f"nohup python /usr/local/bin/kapkova_zavlaha.py "
+           f"--profile-steps {steps_arg} "
+           f"--profile-name {profile_name} "
+           f"--source {source} "
+           f">>{log} 2>&1 </dev/null &")
     return _exec(cmd, timeout=15)
 
 
