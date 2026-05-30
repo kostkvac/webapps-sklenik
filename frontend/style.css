@@ -179,3 +179,76 @@ textarea { width: 100%; font-family: "Fira Code", Consolas, monospace; font-size
   .chart-controls { flex-direction: column; align-items: flex-start; }
   pre { font-size: 0.78rem; }
 }
+
+/* ---------- Profily závlahy ---------- */
+button.danger { background:#c0392b; color:#fff; border:none; padding:.25rem .55rem; border-radius:4px; cursor:pointer; }
+button.danger:hover { background:#a93222; }
+#seq-table { width:100%; border-collapse:collapse; margin-top:.6rem; }
+#seq-table th, #seq-table td { border:1px solid #ddd; padding:.35rem .55rem; text-align:left; font-size:.92rem; }
+#seq-table th { background:#eef6ee; }
+#seq-form-wrap { margin-top:1rem; padding:.8rem; background:#f6fbf6; border:1px solid #cfe2cf; border-radius:6px; }
+#seq-form label { display:flex; align-items:center; gap:.5rem; margin:.35rem 0; }
+.seq-step { display:flex; gap:.4rem; align-items:center; margin:.25rem 0; }
+.seq-step select, .seq-step input { padding:.25rem .35rem; }
+
+/* ---------- Plánovač ---------- */
+#sched-table { width:100%; border-collapse:collapse; margin-top:.6rem; font-size:.88rem; }
+#sched-table th, #sched-table td { border:1px solid #ddd; padding:.3rem .45rem; text-align:left; vertical-align:top; }
+#sched-table th { background:#eef6ee; }
+#sched-form-wrap { margin-top:1rem; padding:.8rem; background:#f6fbf6; border:1px solid #cfe2cf; border-radius:6px; }
+#sched-form label { display:flex; align-items:center; gap:.5rem; margin:.35rem 0; flex-wrap:wrap; }
+.sched-block { margin:.5rem 0; padding:.5rem; background:#fff; border:1px dashed #cfe2cf; border-radius:4px; }
+.time-chip { display:inline-block; background:#e2efe2; padding:.15rem .45rem; margin:.15rem; border-radius:12px; font-size:.85rem; }
+.time-chip-x { background:none; border:none; cursor:pointer; color:#900; font-weight:bold; margin-left:.3rem; padding:0 .2rem; }
+
+/* ---------- Kalendář ---------- */
+.cal-header { display:flex; align-items:center; gap:.5rem; margin-bottom:.75rem; flex-wrap:wrap; }
+.cal-header h2 { margin:0; font-size:1.1rem; min-width:12rem; text-align:center; }
+.cal-header .cal-spacer { flex:1; }
+.cal-header button, .cal-header select { padding:.35rem .6rem; border-radius:6px; border:1px solid #ccc; background:#f7f7f7; cursor:pointer; }
+.cal-grid { display:flex; flex-direction:column; gap:2px; }
+.cal-row { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+.cal-h { background:#eee; padding:.25rem .4rem; font-size:.8rem; text-align:center; font-weight:600; color:#555; }
+.cal-day { background:#fff; border:1px solid #e3e3e3; border-radius:6px; padding:.35rem .4rem; min-height:6.5rem; cursor:pointer; display:flex; flex-direction:column; gap:.25rem; }
+.cal-day:hover { background:#f1fbf3; border-color:#88c9a0; }
+.cal-day.other-month { background:#fafafa; color:#aaa; }
+.cal-day.today { border:2px solid #2a8f3a; background:#f1fbf3; }
+.cal-day.done { background:#f0faf3; border-color:#88c9a0; }
+.cal-date { font-weight:700; font-size:.95rem; }
+.cal-weather { font-size:.72rem; color:#555; display:flex; gap:.4rem; flex-wrap:wrap; }
+.cal-weather.muted { color:#aaa; }
+.cal-weather.humid { color:#2563b0; }
+.cal-weather.wet { color:#1a4280; font-weight:600; }
+.cal-chips { display:flex; flex-direction:column; gap:2px; margin-top:auto; }
+.cal-chip { display:inline-block; font-size:.72rem; padding:1px 5px; border-radius:4px; background:#e7f3ff; color:#214f86; border:1px solid #cfe2f7; }
+.cal-chip.added { background:#fff4d6; color:#8a5a00; border-color:#f3d893; }
+.cal-chip.skipped { background:#f0f0f0; color:#888; text-decoration:line-through; border-color:#ddd; }
+.cal-chip.done { background:#d4edda; color:#1a5c2e; border-color:#88c9a0; }
+.cal-chip.failed { background:#fee2e2; color:#b91c1c; border-color:#fca5a5; }
+.cal-chip.skipped-auto { background:#f1f5f9; color:#475569; border-color:#cbd5e1; }
+.cal-grid.week .cal-day { min-height:11rem; }
+
+/* Modal */
+.modal { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1000; display:flex; align-items:center; justify-content:center; padding:1rem; }
+.modal-box { background:#fff; border-radius:8px; padding:1.25rem; max-width:520px; width:100%; max-height:90vh; overflow:auto; position:relative; box-shadow:0 10px 40px rgba(0,0,0,.25); }
+.modal-close { position:absolute; top:.4rem; right:.6rem; background:none; border:none; font-size:1.5rem; cursor:pointer; color:#888; }
+.modal-close:hover { color:#000; }
+.modal-box h3 { margin:0 0 .5rem; }
+.modal-box h4 { margin:1rem 0 .4rem; font-size:.95rem; color:#444; }
+.run-row { display:flex; align-items:center; justify-content:space-between; gap:.5rem; padding:.35rem .5rem; border-radius:4px; background:#f6f6f6; margin-bottom:4px; }
+.run-row.added { background:#fff4d6; }
+.run-row.skipped { background:#f0f0f0; color:#888; }
+.run-row button { padding:.2rem .55rem; font-size:.8rem; border:1px solid #ccc; border-radius:4px; cursor:pointer; background:#fff; color:#333; }
+.run-row-error { background:#fff1f1; border-left:3px solid #ef4444; padding:.3rem .5rem; border-radius:4px; color:#7f1d1d; margin-bottom:2px; }
+.run-row-skip { background:#f8fafc; border-left:3px solid #94a3b8; padding:.3rem .5rem; border-radius:4px; color:#475569; margin-bottom:2px; }
+#day-add-form { display:flex; flex-direction:column; gap:.4rem; }
+#day-add-form label { display:flex; gap:.4rem; align-items:center; font-size:.9rem; }
+#day-add-form input[type="time"], #day-add-form input[name="note"], #day-add-form select { flex:1; padding:.25rem .4rem; }
+#day-add-form button[type="submit"] { align-self:flex-start; margin-top:.4rem; padding:.35rem .8rem; background:#2a8f3a; color:#fff; border:none; border-radius:4px; cursor:pointer; }
+.muted { color:#888; }
+
+/* ---------- Meteo ---------- */
+#meteo-summary { display:flex; flex-wrap:wrap; gap:.6rem; margin:.6rem 0; }
+.m-cell { background:#f1fbf3; border:1px solid #cfe2cf; border-radius:6px; padding:.4rem .7rem; min-width:7rem; }
+.m-cell .lbl { font-size:.75rem; color:#666; }
+.m-cell .val { font-weight:600; font-size:1.1rem; color:#1a4d1a; }

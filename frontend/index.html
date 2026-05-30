@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Skleník – řízení</title>
-  <link rel="stylesheet" href="style.css?v=12">
+  <link rel="stylesheet" href="style.css?v=16">
 </head>
 <body>
   <header>
@@ -13,6 +13,9 @@
     <nav>
       <button class="tab active" data-tab="dashboard">Dashboard</button>
       <button class="tab" data-tab="zavlaha">Závlaha</button>
+      <button class="tab" data-tab="planovac">Plánovač</button>
+      <button class="tab" data-tab="kalendar">Kalendář</button>
+      <button class="tab" data-tab="meteo">Meteo</button>
       <button class="tab" data-tab="config">Konfigurace</button>
       <button class="tab" data-tab="monitoring">Monitoring</button>
       <button class="tab" data-tab="grafy">Grafy</button>
@@ -56,11 +59,176 @@
         <button type="submit">Spustit</button>
       </form>
       <pre id="zavlaha-output">—</pre>
+
+      <h2 style="margin-top:1.5rem">Spustit profil</h2>
+      <p class="hint">Pojmenovaný profil kroků (např. A 60s → B 120s) – běží sekvenčně na Pi pod jedním zamknutím.</p>
+      <form id="seq-run-form">
+        <label>Profil:
+          <select name="profil_id" id="seq-run-select"></select>
+        </label>
+        <button type="submit">Spustit profil</button>
+      </form>
+      <pre id="seq-run-output">—</pre>
+    </section>
+
+    <!-- Planovac -->
+    <section id="tab-planovac" class="tab-panel">
+      <h2>Plánovač závlahy</h2>
+      <button id="sched-new">+ Nový plán</button>
+      <button id="sched-reload">Načíst</button>
+      <table id="sched-table">
+        <thead><tr>
+          <th>Název</th><th>Cíl</th><th>Plán</th>
+          <th>Platnost</th><th>Doba</th>
+          <th>Skip déšť</th><th>Min °C</th>
+          <th>Aktivní</th><th>Poslední běh</th><th></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+      <h3>Aktivní naplánované běhy</h3>
+      <pre id="sched-jobs">—</pre>
+
+      <div id="sched-form-wrap" style="display:none">
+        <h3 id="sched-form-title">Nový plán</h3>
+        <form id="sched-form">
+          <input type="hidden" name="id">
+          <label>Název: <input name="name" required maxlength="64"></label>
+          <label>Profil:
+            <select name="profil_id" id="sched-sekvence">
+              <option value="">— jednoduchý běh (1 větev) —</option>
+            </select>
+          </label>
+          <label>Větev:
+            <select name="zone" id="sched-zone">
+              <option value="kapkova_a">větev A</option>
+              <option value="kapkova_b">větev B</option>
+              <option value="both">obě postupně</option>
+            </select>
+          </label>
+
+          <fieldset class="sched-kind-fs">
+            <legend>Typ plánu</legend>
+            <label><input type="radio" name="plan_kind" value="once"> Jednorázový</label>
+            <label><input type="radio" name="plan_kind" value="recurring" checked> Opakovaný</label>
+            <label><input type="radio" name="plan_kind" value="cron"> Pokročilý (cron)</label>
+          </fieldset>
+
+          <div id="sched-once-block" class="sched-block">
+            <label>Datum: <input type="date" id="sched-once-date"></label>
+            <label>Čas: <input type="time" id="sched-once-time" value="06:00"></label>
+            <p class="hint">Jednorázový běh se vytvoří jako kalendářová výjimka.</p>
+          </div>
+
+          <div id="sched-recurring-block" class="sched-block">
+            <label>Časy běhu:
+              <span id="sched-times-list"></span>
+              <input type="time" id="sched-time-add" value="06:00" style="width:auto">
+              <button type="button" id="sched-time-add-btn">+ Přidat čas</button>
+            </label>
+
+            <fieldset>
+              <legend>Opakovat</legend>
+              <label><input type="radio" name="rec_kind" value="daily" checked> Každý den</label>
+              <label><input type="radio" name="rec_kind" value="weekdays"> Po–Pá</label>
+              <label><input type="radio" name="rec_kind" value="weekend"> So–Ne</label>
+              <label><input type="radio" name="rec_kind" value="custom"> Vybrané dny:</label>
+              <div id="sched-dow-chips" style="margin-left:1.5em">
+                <label><input type="checkbox" class="dow" value="1"> Po</label>
+                <label><input type="checkbox" class="dow" value="2"> Út</label>
+                <label><input type="checkbox" class="dow" value="3"> St</label>
+                <label><input type="checkbox" class="dow" value="4"> Čt</label>
+                <label><input type="checkbox" class="dow" value="5"> Pá</label>
+                <label><input type="checkbox" class="dow" value="6"> So</label>
+                <label><input type="checkbox" class="dow" value="0"> Ne</label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Platnost</legend>
+              <label>Od: <input type="date" name="start_date"></label>
+              <label>Do (nepovinné): <input type="date" name="end_date"></label>
+              <label>Max. počet běhů (nepovinné):
+                <input type="number" name="max_runs" min="1" max="10000" placeholder="bez limitu" style="width:8em">
+              </label>
+            </fieldset>
+
+            <p class="hint" id="sched-preview" style="font-style:italic"></p>
+          </div>
+
+          <div id="sched-cron-block" class="sched-block">
+            <label>Cron (5 polí): <input name="cron_expr_raw" placeholder="0 6 * * *"></label>
+            <p class="hint">Formát: <code>min hod den-měsíc měsíc den-týdne</code>. Např. <code>0 6 * * 1-5</code> = Po–Pá v 6:00.</p>
+          </div>
+
+          <label>Doba závlahy (s): <input type="number" name="duration_s" min="10" max="600" value="60"></label>
+          <label><input type="checkbox" name="skip_if_rain" checked> Vynechat při dešti</label>
+          <label>Min. teplota °C (volitelné): <input type="number" name="min_temp_c" step="0.1"></label>
+          <label><input type="checkbox" name="enabled" checked> Plán aktivní</label>
+          <button type="submit">Uložit</button>
+          <button type="button" id="sched-cancel">Zrušit</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Kalendar -->
+    <section id="tab-kalendar" class="tab-panel">
+      <div class="cal-header">
+        <button id="cal-prev">◀</button>
+        <h2 id="cal-title">—</h2>
+        <button id="cal-next">▶</button>
+        <span class="cal-spacer"></span>
+        <button id="cal-today">Dnes</button>
+        <select id="cal-mode">
+          <option value="center" selected>±3 dny (dnes uprostřed)</option>
+          <option value="month">Měsíc</option>
+          <option value="week">Týden</option>
+        </select>
+      </div>
+      <div id="cal-grid" class="cal-grid">…</div>
+      <p class="hint">Klikni na den a uprav naplánované běhy nebo přidej jednorázový. Počasí jen do ~14 dní dopředu.</p>
+    </section>
+
+    <!-- Meteo -->
+    <section id="tab-meteo" class="tab-panel">
+      <h2>Předpověď počasí (Open-Meteo)</h2>
+      <button id="meteo-load">Načíst</button>
+      <button id="meteo-force">Stáhnout znovu</button>
+      <div id="meteo-summary"></div>
+      <canvas id="meteo-canvas" height="120"></canvas>
+      <p class="hint">Data sdílena s trávníkem (proxy na <code>:8006</code>).</p>
     </section>
 
     <!-- Config -->
     <section id="tab-config" class="tab-panel">
-      <h2>Konfigurace (config.json)</h2>
+      <h2>Profily závlahy</h2>
+      <p class="hint">Pojmenovaný řetězec kroků (zone + doba). Běží jako jeden proces na Pi – nemůže se překrývat.</p>
+      <button id="seq-new">+ Nový profil</button>
+      <button id="seq-reload">Načíst</button>
+      <table id="seq-table">
+        <thead><tr>
+          <th>Název</th><th>Kroky</th><th>Pozn.</th><th>Výchozí</th><th></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+
+      <div id="seq-form-wrap" style="display:none">
+        <h3 id="seq-form-title">Nový profil</h3>
+        <form id="seq-form">
+          <input type="hidden" name="id">
+          <label>Název: <input name="name" required maxlength="64" pattern="[A-Za-z0-9_\-]+" title="jen písmena, číslice, _ a -"></label>
+          <label>Poznámka: <input name="note" maxlength="255"></label>
+          <label><input type="checkbox" name="is_default"> Výchozí profil</label>
+          <fieldset>
+            <legend>Kroky (pořadí dle uvedení)</legend>
+            <div id="seq-steps"></div>
+            <button type="button" id="seq-add-step">+ Přidat krok</button>
+          </fieldset>
+          <button type="submit">Uložit</button>
+          <button type="button" id="seq-cancel">Zrušit</button>
+        </form>
+      </div>
+
+      <h2 style="margin-top:2rem">Konfigurace (config.json)</h2>
       <button id="config-reload">Načíst z Pi</button>
       <button id="config-save">Uložit na Pi</button>
       <span id="config-status"></span>
@@ -160,7 +328,40 @@
     </section>
   </main>
 
+  <!-- Modal pro detail dne -->
+  <div id="day-modal" class="modal" style="display:none">
+    <div class="modal-box">
+      <button class="modal-close" id="day-modal-close">×</button>
+      <h3 id="day-modal-title">Den</h3>
+      <div id="day-modal-weather"></div>
+      <h4>Naplánované běhy</h4>
+      <div id="day-modal-runs">—</div>
+      <h4>Proběhlé závlahy</h4>
+      <div id="day-modal-past">—</div>
+      <h4>Přidat jednorázový běh</h4>
+      <form id="day-add-form">
+        <label>Čas (HH:MM): <input type="time" name="time" required></label>
+        <label>Profil:
+          <select name="profil_id" id="day-add-sekvence">
+            <option value="">— jednoduchý běh —</option>
+          </select>
+        </label>
+        <label>Větev:
+          <select name="zone" id="day-add-zone">
+            <option value="kapkova_a">větev A</option>
+            <option value="kapkova_b">větev B</option>
+            <option value="both">obě postupně</option>
+          </select>
+        </label>
+        <label>Doba (s): <input type="number" name="duration_s" min="10" max="600" value="60" id="day-add-duration"></label>
+        <label><input type="checkbox" name="skip_if_rain" checked> Vynechat při dešti</label>
+        <label>Pozn.: <input name="note" maxlength="255" placeholder="nepovinné"></label>
+        <button type="submit">Přidat</button>
+      </form>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="app.js?v=12"></script>
+  <script src="app.js?v=16"></script>
 </body>
 </html>
