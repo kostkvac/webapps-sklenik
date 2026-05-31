@@ -140,12 +140,9 @@ async def _execute_schedule(schedule_id: int) -> None:
                             ssh_service.run_zavlaha_profile(
                                 steps, source="scheduled", profile_name=pname,
                             )
-                            for st in steps:
-                                _insert_log_start(db, st["zone"], "scheduled", note=row.name)
                             status = "ok"
                     elif row.zone and row.duration_s:
                         ssh_service.run_zavlaha(zone=row.zone, duration=int(row.duration_s))
-                        _insert_log_start(db, row.zone, "scheduled", note=row.name)
                         status = "ok"
                     else:
                         status = "error:no_target"
@@ -225,13 +222,8 @@ async def _execute_override_add(override_id: int) -> None:
                             ssh_service.run_zavlaha_profile(
                                 steps, source="calendar", profile_name=pname,
                             )
-                            for st in steps:
-                                _insert_log_start(db, st["zone"], "calendar",
-                                                  note=row.note or "Jednorázový běh")
                     elif row.zone and row.duration_s:
                         ssh_service.run_zavlaha(zone=row.zone, duration=int(row.duration_s))
-                        _insert_log_start(db, row.zone, "calendar",
-                                          note=row.note or "Jednorázový běh")
                     else:
                         status = "error:no_target"
             except Exception as exc:  # noqa: BLE001
